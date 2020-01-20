@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- set the character encoding so browesers know how to render characters -->
+    <meta charset="UTF-8">
+
+    <!-- fixes the viewport so we could style for mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Wiki - <%= article.title %></title>
+</head>
+
+<body>
+  <h1><%= article.title %></h1>
+
+  <p><%= article.content %></p>
+
+  <p>
+  <a href="/">Go home</a> | <a href="/articles/<%= article.id %>/edit">Edit this
+    article</a>
+  </p>
+
+  <form method="POST" action="/articles/<%= article.id %>/delete">
+    <input type="submit" value="Delete article">
+  </form>
+</body>
+
+</html>

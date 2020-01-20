@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- set the character encoding so browesers know how to render characters -->
+    <meta charset="UTF-8">
+
+    <!-- fixes the viewport so we could style for mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Wiki - Home</title>
+</head>
+
+<body>
+  <h1>Wiki Articles</h1>
+
+  <ul>
+    <% for (articleId in articles) { %>
+      <li><a href="/articles/<%= articleId %>"><%= articles[articleId].title %></a></li>
+    <% } %>
+  </ul>
+
+  <a href="/articles/new">Create a new article</a>
+</body>
+
+</html>

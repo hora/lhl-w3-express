@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- set the character encoding so browesers know how to render characters -->
+    <meta charset="UTF-8">
+
+    <!-- fixes the viewport so we could style for mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Wiki - Edit article: <%= article.title %></title>
+</head>
+
+<body>
+  <h1>Edit article: <%= article.title %></h1>
+
+  <form method="POST" action="/articles/<%= article.id %>">
+
+    <div>
+      <label for="title">Article title</label>
+      <input type="text" id="title" name="title" value="<%= article.title %>">
+    </div>
+
+    <div>
+      <label for="content">Article content</label>
+      <textarea id="content" name="content"><%= article.content %></textarea>
+    </div>
+
+    <input type="submit" value="Update Article">
+
+  </form>
+
+  <a href="/">Go home</a>
+</body>
+
+</html>
