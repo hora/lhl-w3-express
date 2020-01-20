@@ -157,6 +157,21 @@ app.post('/articles/:id/delete', function(request, response) {
 
 
 
+// --- USER AUTHENTICATION ROUTES ---
+// ----------------------------------
+
+app.get('/login', function(request, response) {
+});
+
+app.post('/login', function(request, response) {
+});
+
+app.get('/register', function(request, resposne) {
+});
+
+app.post('/users', function(request, response) {
+});
+
 
 
 // --- RUNNING THE SERVER ---
