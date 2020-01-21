@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- set the character encoding so browesers know how to render characters -->
+    <meta charset="UTF-8">
+
+    <!-- fixes the viewport so we could style for mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Wiki - Login</title>
+</head>
+
+<body>
+  <h1>Login</h1>
+
+  <form method="POST" action="/login">
+
+    <% if (error) { %>
+      <p><%= error %></p>
+    <% } %>
+
+    <div>
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username">
+    </div>
+
+    <div>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password">
+    </div>
+
+    <input type="submit" value="Login">
+
+  </form>
+
+  <a href="/">Go home</a>
+</body>
+
+</html>

@@ -20,7 +20,14 @@
     <% } %>
   </ul>
 
-  <a href="/articles/new">Create a new article</a>
+  <p><a href="/articles/new">Create a new article</a></p>
+  <p>
+    <% if (user) { %>
+      Welcome, <%= user.username %>. <a href="/logout">Logout</a>
+    <% } else { %>
+      <a href="/login">Login</a>
+    <% } %>
+  </p>
 </body>
 
 </html>

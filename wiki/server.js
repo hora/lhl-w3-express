@@ -7,6 +7,11 @@ const express = require('express');
 const https = require('https'); // for securing our data
 const fs = require('fs');
 const bodyParser = require('body-parser'); // for parsing HTTP requests
+// the following is for unencrypted cookies
+// this is a bad idea in practice, but good for learning :)
+const cookieParser = require('cookie-parser');
+// the following allows us to encrypt our cookies
+const cookieSession = require('cookie-session');
 
 // set the HTTP(S) port
 // a convention is to set this value in an environment variable, if it's present
@@ -20,8 +25,17 @@ const app = express();
 // specify the static asset folder (css, images, etc)
 app.use(express.static('public'));
 
-// initialize the body-parser package
+// initialize the body-parser and the cookie-parser
 app.use(bodyParser());
+app.use(cookieParser());
+
+// initialize the cookie session with some random keys
+// and setting it to expire in 24 hours
+app.use(cookieSession({
+    name: 'session',
+    keys: ['donna haraway', 'medusa', 'plastic shoes', 'unbreakable!'],
+    maxAge: 1000 * 60 * 60 * 24 // 24 hours in miliseconds
+}));
 
 // use EJS (Embedded JavaScript) as the engine that renders our views (the HTML)
 app.set('view engine', 'ejs');
@@ -46,6 +60,29 @@ let articles = {
     }
 };
 
+let users = {
+    'h6vs73': {
+        id: 'h6vs73',
+        username: 'hora',
+        password: 'pickle history moves craft'
+    }
+};
+
+
+
+// --- HELPERS ---
+// ---------------
+
+const getLoggedInUser = function(id) {
+    for (const userID in users) {
+        if (userID === id) {
+            return users[userID];
+        }
+    }
+
+    return null;
+};
+
 
 
 
@@ -57,8 +94,11 @@ let articles = {
 app.get('/', function(request, response) {
     // we're going to need the articles on the index page
     // so we add them to the template variables
+   
     const templateVars = {
-        articles: articles
+        articles: articles,
+        //user: getLoggedInUser(request.cookies.userID)
+        user: getLoggedInUser(request.session.userID)
     };
 
     // render index.ejs, passing along the template variables object
@@ -160,13 +200,61 @@ app.post('/articles/:id/delete', function(request, response) {
 // --- USER AUTHENTICATION ROUTES ---
 // ----------------------------------
 
+// register a GET request for the login form
 app.get('/login', function(request, response) {
+    const templateVars = {
+        error: null
+    };
+
+    // render login.ejs
+    response.render('login', templateVars);
 });
 
 app.post('/login', function(request, response) {
+    const username = request.body.username;
+    const password = request.body.password;
+
+    // search for whether the username and password match a known user
+    let foundUser;
+
+    for (const userID in users) {
+        if (users[userID].username === username && users[userID].password === password) {
+            foundUser = users[userID];
+        }
+    }
+
+    if (foundUser) {
+        // if the username and password were correct, set a cookie to remember
+        // the logged-in user, then redirect to the home page
+
+        //response.cookie('userID', foundUser.id);
+        request.session.userID = foundUser.id;
+        response.redirect('/');
+    } else {
+        // set an error message because the login was unsuccessful
+        const templateVars = {
+            error: 'Could not login :('
+        };
+
+        // re-render the login page, which will show the message
+        // and allow the user to try logging in again
+        response.render('login', templateVars);
+    }
 });
 
-app.get('/register', function(request, resposne) {
+// register a GET request for logging out
+// because this action deletes a cookie, some would argue a POST request would
+// be more appropriate; however, that would require a logout form, which is
+// annoying
+app.get('/logout', function(request, response) {
+    // delete the userID cookie, effectively 'forgetting' who was logged in
+    //response.clearCookie('userID');
+    delete request.session.userID;
+
+    response.redirect('/');
+});
+
+app.get('/register', function(request, response) {
 });
 
 app.post('/users', function(request, response) {
