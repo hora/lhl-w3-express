@@ -1,5 +1,7 @@
 # CRUD and User Authentication with Express.js
 
+Today and tomorrow we're building a simple wiki!
+
 [See the example code in /wiki](/wiki)
 
 ## References and further reading
