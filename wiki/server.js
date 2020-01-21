@@ -2,13 +2,13 @@
 // --- GENERAL SETUP ---
 // ---------------------
 
-// require express
+// require the packages we need
 const express = require('express');
+const https = require('https'); // for securing our data
+const fs = require('fs');
+const bodyParser = require('body-parser'); // for parsing HTTP requests
 
-// require body parser, for parsing data in HTTP request body
-const bodyParser = require('body-parser');
-
-// set the HTTP port
+// set the HTTP(S) port
 // a convention is to set this value in an environment variable, if it's present
 // (process.env.PORT)
 // otherwise, set it to 3000
@@ -162,9 +162,25 @@ app.post('/articles/:id/delete', function(request, response) {
 // --- RUNNING THE SERVER ---
 // --------------------------
 
-// start the server, and listen to incoming HTTP requests on the port specified
+// grab HTTPS certificates
+// (note: the certificates we're using for development were not issues
+// by a certificate authority, and therefore browsers will notify users
+// that the connection is not secure)
+// see this SO answer for how to create certificates:
+// https://stackoverflow.com/a/52007971
+const key = fs.readFileSync(__dirname + '/certs/selfsigned.key');
+const cert = fs.readFileSync(__dirname + '/certs/selfsigned.crt');
+const httpsOptions = {
+    key: key,
+    cert: cert
+};
+
+// create an HTTPS server using the certificates
+const server = https.createServer(httpsOptions, app);
+
+// start the server, and listen to incoming HTTPS requests on the port specified
 // by PORT
-app.listen(PORT, function() {
+server.listen(PORT, function() {
     console.log(`Server listening on port ${PORT}`);
 });
 
