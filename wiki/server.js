@@ -7,6 +7,11 @@ const express = require('express');
 const https = require('https'); // for securing our data
 const fs = require('fs');
 const bodyParser = require('body-parser'); // for parsing HTTP requests
+// this is a bad idea in practice, but good for learning :)
+const cookieParser = require('cookie-parser');
+// the following allows us to encrypt our cookies
+const cookieSession = require('cookie-session');
+
 
 // set the HTTP(S) port
 // a convention is to set this value in an environment variable, if it's present
@@ -20,8 +25,18 @@ const app = express();
 // specify the static asset folder (css, images, etc)
 app.use(express.static('public'));
 
-// initialize the body-parser package
+// initialize the body-parser and cookie-parser packages
 app.use(bodyParser());
+//app.use(cookieParser());
+
+// initialize the cookie session with some random keys
+// and setting it to expire in 24 hours
+app.use(cookieSession({
+    name: 'session',
+    keys: ['random', 'tea', 'sky', 'hello there', 'something else'],
+    maxAge: 1000 * 60 * 60 * 24 // 24 hours in miliseconds
+}));
+
 
 // use EJS (Embedded JavaScript) as the engine that renders our views (the HTML)
 app.set('view engine', 'ejs');
@@ -47,6 +62,22 @@ let articles = {
 };
 
 
+let users = {
+    1: {
+        id: 1,
+        username: 'horatiu',
+        password: 'one coffee more coffee please'
+    },
+    2: {
+        id: 2,
+        username: 'francis',
+        password: 'little chicken'
+    }
+};
+
+// we can use this to keep track of the ID of the next user
+let nextUserID = 3;
+
 
 
 // --- ARTICLE ROUTES ---
@@ -55,10 +86,14 @@ let articles = {
 // the / route is the home, or index, page
 // this route will render a list of the titles of all wiki articles
 app.get('/', function(request, response) {
+
+    let user = users[request.session.userID];
+
     // we're going to need the articles on the index page
     // so we add them to the template variables
     const templateVars = {
-        articles: articles
+        articles: articles,
+        user: user
     };
 
     // render index.ejs, passing along the template variables object
@@ -155,6 +190,105 @@ app.post('/articles/:id/delete', function(request, response) {
     response.redirect('/');
 });
 
+
+
+
+
+
+// --- USER AUTH ROUTES ---
+// ------------------------
+
+app.get('/login', function(request, response) {
+    let templateVars = {
+        error: false
+    };
+
+    response.render('login', templateVars);
+});
+
+// register a GET request for logging out
+// because this action deletes a cookie, some would argue a POST request would
+// be more appropriate; however, that would require a logout form, which I find
+// annoying
+app.get('/logout', function(request, response) {
+    delete request.session.userID;
+    response.redirect('/');
+});
+
+app.get('/register', function(request, response) {
+    let templateVars = {
+        error: false
+    };
+
+    response.render('register', templateVars);
+});
+
+app.post('/login', function(request, response) {
+    const username = request.body.username;
+    const password = request.body.password;
+
+    // search for whether the username and password match a known user
+    let foundUser;
+
+    for (const userID in users) {
+        // if the username and password were correct, set a cookie to remember
+        // the logged-in user, then redirect to the home page
+        if(users[userID].username === username && users[userID].password === password) {
+            foundUser = users[userID];
+        }
+    }
+
+    if (foundUser) {
+        request.session.userID = foundUser.id;
+        response.redirect('/');
+    } else {
+
+        let templateVars = {
+            error: true
+        }
+
+        response.render('login', templateVars);
+    }
+});
+
+app.post('/register', function(request, response) {
+    const username = request.body.username;
+    const password = request.body.password;
+
+    let foundUser;
+
+    // search for whether the username already exists in our in-memory database
+    for (const userID in users) {
+        if(users[userID].username === username) {
+            foundUser = users[userID];
+        }
+    }
+
+    // this means someone is already registered with that username
+    if (foundUser) {
+        let templateVars = {
+            error: 'That username is already taken, pick another one!'
+        }
+
+        response.render('register', templateVars);
+    } else {
+        let newUser = {
+            id: nextUserID,
+            username: username,
+            password: password
+        };
+
+        users[nextUserID] = newUser;
+        // increment the next user ID counter so there's no overlapping user IDs
+        nextUserID++;
+
+        // once a user has registered (that is, their username and password
+        // has been saved to the in-memory database), log the user in
+        // and redirect them to the home page
+        request.session.userID = newUser.id;
+        response.redirect('/');
+    }
+});
 
 
 
