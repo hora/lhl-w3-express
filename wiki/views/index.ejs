@@ -24,9 +24,9 @@
     <ul>
       <li><a href="/articles/new">Create a new article</a></li>
       <% if(user) { %>
-        <li>Hi <%= user.username %>! <a href="/logout">Logout</a></li>
+        <li>Hello <%= user.username %> | <a href="/logout">Logout</a></li>
       <% } else { %>
-        <li><a href="/login">Login</a></li>
+        <li><a href="/login">Login</a>
         <li><a href="/register">Register</a></li>
       <% } %>
     </ul>

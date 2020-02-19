@@ -7,11 +7,8 @@ const express = require('express');
 const https = require('https'); // for securing our data
 const fs = require('fs');
 const bodyParser = require('body-parser'); // for parsing HTTP requests
-// this is a bad idea in practice, but good for learning :)
-const cookieParser = require('cookie-parser');
 // the following allows us to encrypt our cookies
 const cookieSession = require('cookie-session');
-
 
 // set the HTTP(S) port
 // a convention is to set this value in an environment variable, if it's present
@@ -25,18 +22,16 @@ const app = express();
 // specify the static asset folder (css, images, etc)
 app.use(express.static('public'));
 
-// initialize the body-parser and cookie-parser packages
+// initialize the body-parser
 app.use(bodyParser());
-//app.use(cookieParser());
 
 // initialize the cookie session with some random keys
 // and setting it to expire in 24 hours
 app.use(cookieSession({
     name: 'session',
-    keys: ['random', 'tea', 'sky', 'hello there', 'something else'],
+    keys: ['donna haraway', 'medusa', 'plastic shoes', 'unbreakable!'],
     maxAge: 1000 * 60 * 60 * 24 // 24 hours in miliseconds
 }));
-
 
 // use EJS (Embedded JavaScript) as the engine that renders our views (the HTML)
 app.set('view engine', 'ejs');
@@ -61,22 +56,22 @@ let articles = {
     }
 };
 
-
 let users = {
     1: {
-        id: 1,
-        username: 'horatiu',
-        password: 'one coffee more coffee please'
+        id: '1',
+        username: 'hora',
+        password: '123'
     },
     2: {
-        id: 2,
+        id: '2',
         username: 'francis',
-        password: 'little chicken'
+        password: 'chicken little'
     }
 };
 
 // we can use this to keep track of the ID of the next user
 let nextUserID = 3;
+
 
 
 
@@ -87,10 +82,12 @@ let nextUserID = 3;
 // this route will render a list of the titles of all wiki articles
 app.get('/', function(request, response) {
 
-    let user = users[request.session.userID];
+    // look up whether someone has logged in by checking the cookies
+    const user = users[request.session.userID];
 
     // we're going to need the articles on the index page
     // so we add them to the template variables
+    // we'll also need the user
     const templateVars = {
         articles: articles,
         user: user
@@ -199,11 +196,43 @@ app.post('/articles/:id/delete', function(request, response) {
 // ------------------------
 
 app.get('/login', function(request, response) {
-    let templateVars = {
-        error: false
+    const templateVars = {
+        error: false,
+        user: users[request.session.userID]
     };
 
     response.render('login', templateVars);
+});
+
+app.post('/login', function(request, response) {
+    const username = request.body.username;
+    const password = request.body.password;
+
+    // search for whether the username and password match a known user
+    let user = null;
+
+    for (let userID in users) {
+        // if the username and password were correct, we've found a user
+        if (users[userID].username === username && users[userID].password === password) {
+            user = users[userID];
+        }
+    }
+
+    // if we found a user above, set a cookie to remember
+    // the logged-in user, then redirect to the home page
+    if (user) {
+        // response.cookie('userID', user.id);
+        request.session.userID = user.id;
+        response.redirect('/');
+    } else {
+        const templateVars = {
+            error: true,
+            user: users[request.session.userID]
+        };
+
+        response.render('login', templateVars);
+    }
+
 });
 
 // register a GET request for logging out
@@ -211,6 +240,8 @@ app.get('/login', function(request, response) {
 // be more appropriate; however, that would require a logout form, which I find
 // annoying
 app.get('/logout', function(request, response) {
+    // response.clearCookie('userID');
+
     delete request.session.userID;
     response.redirect('/');
 });
@@ -221,34 +252,6 @@ app.get('/register', function(request, response) {
     };
 
     response.render('register', templateVars);
-});
-
-app.post('/login', function(request, response) {
-    const username = request.body.username;
-    const password = request.body.password;
-
-    // search for whether the username and password match a known user
-    let foundUser;
-
-    for (const userID in users) {
-        // if the username and password were correct, set a cookie to remember
-        // the logged-in user, then redirect to the home page
-        if(users[userID].username === username && users[userID].password === password) {
-            foundUser = users[userID];
-        }
-    }
-
-    if (foundUser) {
-        request.session.userID = foundUser.id;
-        response.redirect('/');
-    } else {
-
-        let templateVars = {
-            error: true
-        }
-
-        response.render('login', templateVars);
-    }
 });
 
 app.post('/register', function(request, response) {
@@ -289,6 +292,9 @@ app.post('/register', function(request, response) {
         response.redirect('/');
     }
 });
+
+
+
 
 
 
